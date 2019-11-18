@@ -238,6 +238,7 @@ void spi_led(int led)
 int spi_xfer_begin(int get_status)
 {
     unsigned int status_offset = 0;
+    static int old_status = -1;
     int status;
 
     LOG(DEBUG, "");
@@ -299,6 +300,13 @@ int spi_xfer_begin(int get_status)
          * reading the status after setting CS# to 0.
          */
 
+        /* useless wait */
+        ftdi_pin_state |= spi_pins->mosi;
+        ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
+
+        ftdi_pin_state &= ~spi_pins->mosi;
+        ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
+
         status_offset = ftdi_out_buf_offset;
         ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
 
@@ -306,10 +314,16 @@ int spi_xfer_begin(int get_status)
             return -1;
 
         if (ftdi_in_buf[status_offset] & spi_pins->miso)
+          {
             status = SPI_CPU_STOPPED;
+            if (old_status != status) fprintf(stderr, "Stopped\n");
+          }
         else
+          {
             status = SPI_CPU_RUNNING;
-
+            if (old_status != status) fprintf(stderr, "Running\n");
+          }
+        old_status = status;
         /* Other data in the buffer is useless, discard it */
         ftdi_out_buf_offset = 0;
 
@@ -321,6 +335,7 @@ int spi_xfer_begin(int get_status)
 
 int spi_xfer_end(void)
 {
+    int i;
     LOG(DEBUG, "");
 
     /* Check if there is enough space in the buffer */
@@ -336,9 +351,17 @@ int spi_xfer_end(void)
     /* Commit the last ftdi_pin_state after spi_xfer() */
     ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
 
-    ftdi_pin_state |= spi_pins->ncs;
+    ftdi_pin_state |= spi_pins->clk;
     ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
 
+    for (i = 0; i < 2; i++)
+      {
+        ftdi_pin_state |= spi_pins->mosi;
+        ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
+        ftdi_pin_state &= ~spi_pins->mosi;
+        ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
+      }
+    
     /* Buffer flush is done on close */
 
 #ifdef SPI_STATS
@@ -759,7 +782,7 @@ int spi_open(int nport)
     }
 
     /* Set pins direction */
-    output_pins = spi_pins->mosi | spi_pins->clk | spi_pins->ncs;
+    output_pins = spi_pins->mosi | spi_pins->clk;
     if (spi_pins->nledr)
         output_pins |= spi_pins->nledr;
     if (spi_pins->nledw)
@@ -842,7 +865,7 @@ int spi_open(int nport)
     ftdi_out_buf_offset = 0;
 
     /* Set initial pin state: CS high, MISO high as pullup, MOSI and CLK low, LEDs off */
-    ftdi_pin_state = spi_pins->ncs | spi_pins->miso;
+    ftdi_pin_state = spi_pins->miso;
     if (spi_pins->nledr)
         ftdi_pin_state |= spi_pins->nledr;
     if (spi_pins->nledw)

@@ -39,10 +39,10 @@ const SPIVARDEF g_pVarList[]={
     {"SPICMDWRITEBITS","0",0},
     {"SPIMAXCLOCK","1000",0},
     {"FTDI_BASE_CLOCK","2000000",0},
-    {"FTDI_LOG_LEVEL","warn",0},
-    {"FTDI_LOG_FILE","stderr",0},
-    {"FTDI_PINOUT","0",0},
-    {"FTDI_INTERFACE","A",0}
+    {"FTDI_LOG_LEVEL","debug,dump",0},
+    {"FTDI_LOG_FILE","logfile",0},
+    {"FTDI_PINOUT","nexys4ddr",0},
+    {"FTDI_INTERFACE","B",0}
 };
 
 int g_nSpiPort=1;
@@ -259,8 +259,7 @@ static int spifns_sequence_write(unsigned short nAddress, unsigned short nLength
     if (!spi_isopen())
         _ERR_RETURN(SPIERR_NO_LPT_PORT_SELECTED, "No FTDI device selected");
 
-    DUMP(pnInput, nLength << 1, "write16(addr=0x%04x, len16=%d)",
-            nAddress, nLength);
+    fprintf(stderr, "write16(addr=0x%04x, len16=%d)\n", nAddress, nLength);
 
 #ifdef ENABLE_LEDS
     spi_led(SPI_LED_WRITE);
@@ -345,7 +344,8 @@ static int spifns_sequence_setvar(const char *szName, const char *szValue) {
                         return 1;
 
                     cp = val;
-                    lvl = 0;
+                    lvl = LOG_FLAGS_DUMP;
+#if 0                    
                     while ((tok = strtok(cp, ",")) != NULL) {
                         cp = NULL;
                         switch (toupper(tok[0])) {
@@ -372,7 +372,7 @@ static int spifns_sequence_setvar(const char *szName, const char *szValue) {
                             return 1;
                         }
                     }
-
+#endif
                     free(val);
                     log_set_options(lvl);
                 }
@@ -458,6 +458,9 @@ static int spifns_sequence_read(unsigned short nAddress, unsigned short nLength,
                 "Unable to start read (getting control data)");
 
     if (inbuf1[0] != 3 || inbuf1[1] != (nAddress >> 8)) {
+      
+      LOG(ERR, "inbuf1[0] = %.2X, inbuf1[1] = %.2X, control = %.2X\n", inbuf1[0], inbuf1[1], nAddress >> 8);
+      
         _ERR_RETURN(SPIERR_READ_FAILED,
                 "Unable to start read (invalid control data)");
         LOG(ERR, "Control data: 0x%02x 0x%02x", inbuf1[0], inbuf1[1]);
@@ -470,8 +473,7 @@ static int spifns_sequence_read(unsigned short nAddress, unsigned short nLength,
     if (spi_xfer_end() < 0)
         _ERR_RETURN(SPIERR_READ_FAILED, "Unable to end transfer");
 
-    DUMP(pnOutput, nLength << 1, "read16(addr=0x%04x, len16=%d)",
-            nAddress, nLength);
+    fprintf(stderr, "read16(addr=0x%04x, len16=%d)\n", nAddress, nLength);
 
     return 0;
 
@@ -533,23 +535,10 @@ DLLEXPORT int spifns_bluecore_xap_stopped() {
     status = spi_xfer_begin(1);
     if (status < 0)
         return SPIFNS_XAP_NO_REPLY;
-    if (spi_xfer(SPI_XFER_WRITE, 8, outbuf, 3) < 0)
-        return SPIFNS_XAP_NO_REPLY;
-    if (spi_xfer(SPI_XFER_READ, 8, inbuf, 2) < 0)
-        return SPIFNS_XAP_NO_REPLY;
-    if (spi_xfer_end() < 0)
-        return SPIFNS_XAP_NO_REPLY;
-    DUMP(inbuf, 2, "read8(addr=0x%04x, len=%d)", GBL_CHIP_VERSION_GEN1_ADDR, 3);
 
     if (status == SPI_CPU_RUNNING) {
         LOG(DEBUG, "CPU is running");
         return SPIFNS_XAP_RUNNING;
-    }
-
-    if (inbuf[0] != 3 || inbuf[1] != (GBL_CHIP_VERSION_GEN1_ADDR >> 8)) {
-        /* No chip present or not responding correctly, no way to find out. */
-        LOG(ERR, "No reply from XAP");
-        return SPIFNS_XAP_NO_REPLY;
     }
 
     LOG(DEBUG, "CPU is stopped");

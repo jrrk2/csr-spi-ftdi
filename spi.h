@@ -66,17 +66,9 @@ struct spi_pins {
 #define SPI_PIN_PRESET_HWSPI \
     { (1 << 3), (1 << 0), (1 << 1), (1 << 2), 0, 0 }
 
-/* ?, clk, mosi, ? */
-#define SPI_PIN_PRESET_NEXYS4DDR_OK1 { (1 << 0), (1 << 2), (1 << 1), (1 << 7), 0, 0 }
-#define SPI_PIN_PRESET_NEXYS4DDR_OK2 { (1 << 0), (1 << 2), (1 << 3), (1 << 7), 0, 0 }
-#define SPI_PIN_PRESET_NEXYS4DDR_OK3 { (1 << 0), (1 << 2), (1 << 3), (1 << 1), 0, 0 }
-#define SPI_PIN_PRESET_NEXYS4DDR_OK4 { (1 << 0), (1 << 2), (1 << 4), (1 << 1), 0, 0 }
-#define SPI_PIN_PRESET_NEXYS4DDR_OK5 { (1 << 0), (1 << 2), (1 << 3), (1 << 1), 0, 0 }
-#define SPI_PIN_PRESET_NEXYS4DDR_TEST6 { (1 << 3), (1 << 2), (1 << 0), (1 << 1), 0, 0 }
-#define SPI_PIN_PRESET_NEXYS4DDR_TEST7 { (1 << 3), (1 << 0), (1 << 2), (1 << 1), 0, 0 }
-#define SPI_PIN_PRESET_NEXYS4DDR_TEST8 { (1 << 0), (1 << 0), (1 << 2), (1 << 1), 0, 0 }
-// #define SPI_PIN_PRESET_NEXYS4DDR_TEST8 { (1 << 1), (1 << 3), (1 << 0), (1 << 2), 0, 0 }
-#define SPI_PIN_PRESET_NEXYS4DDR SPI_PIN_PRESET_NEXYS4DDR_TEST8
+/* cs, clk, mosi, miso */
+
+#define SPI_PIN_PRESET_NEXYS4DDR { 0, (1 << 0), (1 << 2), (1 << 1), 0, 0 }
 
 #define SPI_PIN_PRESETS { \
         SPI_PIN_PRESET_DEFAULT, \

@@ -267,24 +267,24 @@ int spi_xfer_begin(int get_status)
     /* BlueCore chip SPI port reset sequence: deassert CS, wait at least two
      * clock cycles */
 
-    ftdi_pin_state |= spi_pins->ncs;
-    ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
-
     ftdi_pin_state |= spi_pins->clk;
     ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
 
-    ftdi_pin_state &= ~spi_pins->clk;
+    ftdi_pin_state |= spi_pins->mosi;
     ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
 
-    ftdi_pin_state |= spi_pins->clk;
+    ftdi_pin_state &= ~spi_pins->mosi;
     ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
 
-    ftdi_pin_state &= ~spi_pins->clk;
+    ftdi_pin_state |= spi_pins->mosi;
+    ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
+
+    ftdi_pin_state &= ~spi_pins->mosi;
     ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
 
     /* Start transfer */
 
-    ftdi_pin_state &= ~spi_pins->ncs;
+    ftdi_pin_state &= ~spi_pins->clk;
     ftdi_out_buf[ftdi_out_buf_offset++] = ftdi_pin_state;
 
     if (get_status) {

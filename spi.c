@@ -635,6 +635,8 @@ int spi_set_clock(unsigned long spi_clk) {
         return -1;
     }
 
+    fprintf(stderr, "*/\nspi_set_clock(%ld); /*", spi_clk);
+
     if (spi_clk > spi_max_clock)
         spi_clk = spi_max_clock;
 

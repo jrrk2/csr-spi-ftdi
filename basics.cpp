@@ -243,6 +243,7 @@ static bool spifns_sequence_setvar_spiport(int nPort) {
 }
 
 static int spifns_sequence_write(unsigned short nAddress, unsigned short nLength, unsigned short *pnInput) {
+    int i;
     uint8_t outbuf1[] = {
         0x02,                       /* Command: write */
         (uint8_t)(nAddress >> 8),   /* Address high byte */
@@ -259,8 +260,16 @@ static int spifns_sequence_write(unsigned short nAddress, unsigned short nLength
     if (!spi_isopen())
         _ERR_RETURN(SPIERR_NO_LPT_PORT_SELECTED, "No FTDI device selected");
 
-    fprintf(stderr, "write16(addr=0x%04x, len16=%d)\n", nAddress, nLength);
-
+    fprintf(stderr, "*/\n");
+    if (nLength == 1)
+      fprintf(stderr, "write16_1(0x%04x, 0x%04x); /*\n", nAddress, *pnInput);
+    else
+      {
+        fprintf(stderr, "write16(0x%04x, %d); /* ", nAddress, nLength);
+        for (i = 0; i < nLength; i++) fprintf(stderr, "%c 0x%04X", i ? ',' : '{', pnInput[i]);
+        fprintf(stderr, "}\n");
+      }
+    
 #ifdef ENABLE_LEDS
     spi_led(SPI_LED_WRITE);
 #endif
@@ -426,6 +435,7 @@ static int spifns_sequence_setvar(const char *szName, const char *szValue) {
 }
 
 static int spifns_sequence_read(unsigned short nAddress, unsigned short nLength, unsigned short *pnOutput) {
+    int i;
     uint8_t outbuf[] = {
         3,                          /* Command: read */
         (uint8_t)(nAddress >> 8),   /* Address high byte */
@@ -473,8 +483,15 @@ static int spifns_sequence_read(unsigned short nAddress, unsigned short nLength,
     if (spi_xfer_end() < 0)
         _ERR_RETURN(SPIERR_READ_FAILED, "Unable to end transfer");
 
-    fprintf(stderr, "read16(addr=0x%04x, len16=%d)\n", nAddress, nLength);
-
+    fprintf(stderr, "*/\n");
+    if (nLength == 1)
+      fprintf(stderr, "read16_1(0x%04x); /* returned 0x%04x\n", nAddress, *pnOutput);
+    else
+      {
+        fprintf(stderr, "read16(0x%04x, %d); /* returned ", nAddress, nLength);
+        for (i = 0; i < nLength; i++) fprintf(stderr, "%c 0x%04X", i ? ',':'{', pnOutput[i]);
+        fprintf(stderr, "}\n");
+      }
     return 0;
 
 #undef _ERR_RETURN
@@ -521,13 +538,6 @@ DLLEXPORT int spifns_sequence(SPISEQ *pSequence, unsigned int nCount) {
 }
 
 DLLEXPORT int spifns_bluecore_xap_stopped() {
-    /* Read chip version */
-    uint8_t outbuf[] = {
-        3,      /* Command: read */
-        GBL_CHIP_VERSION_GEN1_ADDR >> 8,   /* Address high byte */
-        GBL_CHIP_VERSION_GEN1_ADDR & 0xff,   /* Address low byte */
-    };
-    uint8_t inbuf[2];
     int status;
 
     LOG(DEBUG, "");

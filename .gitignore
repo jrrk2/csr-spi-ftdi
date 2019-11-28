@@ -3,3 +3,5 @@ libusb*
 lib-*
 obj-*
 csr-spi-ftdi-*
+*.log
+*~

@@ -1,3 +1,6 @@
+This is the LowRISC Nexys4-DDR version of csr-spi-ftdi. It can be used to configure BlueCore04 chips (firmware tested: "cyt_8unified_fl_bt3.0_23i_1002111152_native_encr56 2010-02-11") and possibly others, if you have a [Nexys4-DDR board](https://reference.digilentinc.com/reference/programmable-logic/nexys-4-ddr/start), a [Digilent PmodBT2](https://reference.digilentinc.com/reference/pmod/pmodbt2/start), and an existing copy of BlueSuite (tested version 2.6.6.1311).
+The Nexys board needs to be programmed with [this project](https://github.com/jrrk2/ft2232c_ila).
+
 **Table of Contents**
 
 * [CSR BlueCore USB SPI programmer/debugger](#csr-bluecore-usb-spi-programmerdebugger)
